@@ -12,6 +12,11 @@ public class Proc : gGUI
 
 		createPopTop();
 		createPopPerson();
+		createPopInfo();
+
+		//popTop.show(true);
+		popPerson.show(true);
+		popPersonInfo.show(true);
 	}
 
 	public override void free()
@@ -22,19 +27,19 @@ public class Proc : gGUI
 	public override void draw(float dt)
 	{
 		drawBg(dt);
-
 		drawPopTop(dt);
 		drawPopPerson(dt);
-		GUI.DrawTexture(new Rect(MainCamera.devWidth - 200, 150, texScrollView.width, texScrollView.height), texScrollView);
+		drawPopInfo(dt);
 	}
 
 	public override void key(iKeystate stat, iPoint point)
 	{
 		keyPopPerson(stat, point);
-		if (keyPopTop(stat, point))
-			return;
 
 		keyBg(stat, point);
+		keyPopInfo(stat, point);
+		if (keyPopTop(stat, point))
+			return;
 
 		if (stat == iKeystate.Began)
 		{
@@ -59,7 +64,7 @@ public class Proc : gGUI
 	{
 		setRGBA(1, 1, 1, 1);
 		fillRect(0, 0, MainCamera.devWidth, MainCamera.devHeight);
-
+		
 		setRGBA(1, 1, 0, 1);
 		fillRect(100, 100, 300, 200);
 	}
@@ -114,14 +119,13 @@ public class Proc : gGUI
 	// ========================================================
 	// popPerson
 	// ========================================================
-	iPopup popPerson;
+	iPopup popPerson = null;
 
 	iStrTex stPerson;
 	iImage[] imgPersonBtn;
 	iStrTex[][] stPersonBtn;
 
-	RenderTexture texScrollView;
-	float offX, offY, maxY;
+	float offX, offY, minY, maxY;
 	string[] names;
 	void createPopPerson()
 	{
@@ -131,10 +135,11 @@ public class Proc : gGUI
 		iStrTex st = new iStrTex(methodStPerson, 200, 500);
 		img.add(st.tex);
 		pop.add(img);
+		stPerson = st;
 
 		imgPersonBtn = new iImage[100];
 		stPersonBtn = new iStrTex[100][];
-		for(int i=0; i<100; i++)
+		for(int i=0; i< people; i++)
 		{
 			stPersonBtn[i] = new iStrTex[2];
 
@@ -142,12 +147,12 @@ public class Proc : gGUI
 			for(int j=0; j<2; j++)
 			{
 				st = new iStrTex(methodStPersonBtn, 150, 50);
-				st.setString(j+"\n"+"name");
+				st.setString(j + "\n" + i + "번");
 				img.add(st.tex);
 
 				stPersonBtn[i][j] = st;
 			}
-			img.position = new iPoint(0, 60 * i);
+			img.position = new iPoint(30, 10 + 60 * i);
 			imgPersonBtn[i] = img;
 		}
 
@@ -156,19 +161,27 @@ public class Proc : gGUI
 		pop.closePoint = new iPoint(MainCamera.devWidth - 210, (MainCamera.devHeight - 500) / 2);
 		pop._aniDt = 0.5f;
 		popPerson = pop;
+
+		offX = 0;
+		offY = 0;
+		minY = 490 - 60 * 100;
+		maxY = 0;
 	}
 
 	public void methodStPerson(iStrTex st)
 	{
 		iStrTex.methodTexture(st, methodStPerson_);
 	}
+	int people = 100;
 	public void methodStPerson_(iStrTex st)
 	{
-		int people = 100;
-		for (int i = 0; i < people - 1; i++)
+		setRGBA(0.5f, 0.5f, 0.5f, 0.5f);
+		fillRect(0, 0, 300, 600);
+		
+		for (int i = 0; i < people; i++)
 		{
-			for (int j = 0; j < 2; j++)
-				stPersonBtn[i][j].setString(j + "\n" + i + "번");
+			//for (int j = 0; j < 2; j++)
+			//	stPersonBtn[i][j].setString(j + "\n" + i + "번");
 			imgPersonBtn[i].frame = (popPerson.selected == i ? 1 : 0);
 			imgPersonBtn[i].paint(0.0f, new iPoint(offX, offY));
 		}
@@ -184,10 +197,12 @@ public class Proc : gGUI
 		int index = int.Parse(strs[0]);
 		string s = strs[1];
 
-		if( index==0 )
-			setRGBA(0.3f, 0.3f, 0.3f, 1);
-		else 
+		GUI.color = Color.white;
+		if ( index==0 )
 			setRGBA(1, 1, 1, 1);
+		else 
+			setRGBA(0.3f, 0.3f, 0.3f, 1);
+		
 		fillRect(0, 0, 150, 50);
 
 		setStringRGBA(0, 0, 0, 1);
@@ -195,9 +210,10 @@ public class Proc : gGUI
 
 	}
 
+	iKeystate statePerson_ = iKeystate.Moved;
 	void drawPopPerson(float dt)
 	{
-		stPerson.setString("" + offY);
+		stPerson.setString(statePerson_ + "" + offY);// click, move
 
 		popPerson.paint(dt);
 	}
@@ -220,7 +236,15 @@ public class Proc : gGUI
 			// 없을대 false
 		}
 
+		iPoint p;
+		p = popPerson.closePoint;
+		p.y += offY;
+
+		statePerson_ = stat;
+
 		int i, j = -1;
+		iSize s = new iSize(0, 0);
+			
 
 		switch ( stat )
 		{
@@ -228,9 +252,9 @@ public class Proc : gGUI
 				scroll = false;
 				firstPoint = point;
 				prevPoint = point;
-				for(i=0; i<10; i++)
+				for(i=0; i<people; i++)
 				{
-					if( imgPersonBtn[i].touchRect(popPerson.closePoint, new iSize(0, 0)).containPoint(point) )
+					if ( imgPersonBtn[i].touchRect(p, s).containPoint(point) )
 					{
 						j = i;
 						break;
@@ -249,17 +273,26 @@ public class Proc : gGUI
 					mp = point - firstPoint;
 					if (Mathf.Sqrt(mp.x * mp.x + mp.y * mp.y) > 5)
 					{
-						scroll = true;
+						if (point.x > popPerson.closePoint.x && point.x < popPerson.closePoint.x + 200 &&
+							point.y > popPerson.closePoint.y && point.y < popPerson.closePoint.y + 500)
+							scroll = true;
 						prevPoint = point;
+
+						popPerson.selected = -1;
 					}
 				}
 
 				if( scroll )
 				{
 					mp = point - prevPoint;
-					offX += mp.x;
+					prevPoint = point;
+
+					//offX += mp.x;
 					offY += mp.y;
-					// 최대값 최소값
+					if (offY < minY)
+						offY = minY;
+					else if (offY > maxY)
+						offY = maxY;
 				}
 				break;
 
@@ -279,8 +312,15 @@ public class Proc : gGUI
 
 	bool wheelPopPerson(iPoint point)
 	{
-		offY += 10.0f;
-		// 최대값 최소값
+		iPoint p = MainCamera.mousePosition();
+		if (p.x > popPerson.closePoint.x && p.x < popPerson.closePoint.x + 200 &&
+			p.y > popPerson.closePoint.y && p.y < popPerson.closePoint.y + 500)
+			offY += point.y * 10.0f;
+		
+		if (offY < minY)
+			offY = minY;
+		else if (offY > maxY)
+			offY = maxY;
 
 		return true;
 	}
@@ -288,4 +328,177 @@ public class Proc : gGUI
 	// ========================================================
 	// popInfo
 	// ========================================================
+	iPopup popPersonInfo = null;
+
+	iStrTex stPersonInfo;
+	iImage[] imgPersonInfoBtn;
+	iStrTex[][] stPersonInfoBtn;
+
+	void createPopInfo()
+	{
+		iPopup pop = new iPopup();
+
+		iImage img = new iImage();
+		iStrTex st = new iStrTex(methodStPersonInfo, 700, 400);
+		// st.setString imgPersonInfoBtn 아직 생성안함
+		img.add(st.tex);
+		pop.add(img);
+		stPersonInfo = st;
+
+		//닫는버튼 / 직업 바꾸기 버튼 두 개만 필요
+		imgPersonInfoBtn = new iImage[2]; // 0 : 닫기 1 : 직업 바꾸기
+		stPersonInfoBtn = new iStrTex[2][];//눌렸을 때
+
+		for(int i=0; i<2; i++)
+		{
+			stPersonInfoBtn[i] = new iStrTex[2];
+
+			img = new iImage();
+			for (int j = 0; j < 2; j++)
+			{
+				//닫기 : 0
+				if ( i==0 )
+				{
+					st = new iStrTex(methodStPersonInfoBtn, 50, 50);
+					st.setString(j+"\n"+"X");
+				}
+				//직업 바꾸기 : 1
+				else
+				{
+					st = new iStrTex(methodStPersonInfoBtn, 150, 50);
+					st.setString(j + "\n" + " 직업 ");
+				}
+				img.add(st.tex);
+
+				stPersonInfoBtn[i][j] = st;
+			}
+			if(i == 0)
+				img.position = new iPoint(700 - 70, 10);
+			else
+				img.position = new iPoint(450, 250);
+			imgPersonInfoBtn[i] = img;
+		}
+
+		pop.style = iPopupStyle.move;
+		pop.openPoint = new iPoint(MainCamera.devWidth, MainCamera.devHeight );
+		pop.closePoint = new iPoint(MainCamera.devWidth/2-350, MainCamera.devHeight/2-200);
+		pop._aniDt = 0.5f;
+		popPersonInfo = pop;
+	}
+	public void methodStPersonInfo(iStrTex st)
+	{
+		iStrTex.methodTexture(st, methodStPersonInfo_);
+	}
+
+	public void methodStPersonInfo_(iStrTex st)
+	{
+		setRGBA(0.5f, 0.5f, 0.5f, 0.5f);
+		fillRect(0, 0, 700, 400);
+
+		setRGBA(1, 1, 1, 1);
+		drawRect(50, 50, 300, 300);//이미지
+
+		drawString("이름", new iPoint(450, 100), VCENTER | HCENTER);
+		drawString("레벨", new iPoint(450, 150), VCENTER | HCENTER);
+		drawString("동작", new iPoint(450, 200), VCENTER | HCENTER);
+
+		for (int i = 0; i < 2; i++)
+		{
+			//for (int j = 0; j < 2; j++)
+			//	stPersonBtn[i][j].setString(j + "\n" + i + "번");
+			imgPersonInfoBtn[i].frame = (popPersonInfo.selected == i ? 1 : 0);
+			imgPersonInfoBtn[i].paint(0.0f, new iPoint(0, 0));
+		}
+	}
+
+	public void methodStPersonInfoBtn(iStrTex st)
+	{
+		iStrTex.methodTexture(st, methodStPersonInfoBtn_);
+	}
+	public void methodStPersonInfoBtn_(iStrTex st)
+	{
+		string[] strs = st.str.Split("\n");
+		int index = int.Parse(strs[0]);
+		string s = strs[1];
+
+		GUI.color = Color.white;
+		if (index == 0)
+			setRGBA(1, 0, 0, 1);
+		else
+			setRGBA(0.3f, 0.3f, 0.3f, 1);
+
+		fillRect(0, 0, 150, 50);
+
+		setStringRGBA(0, 0, 0, 1);
+		drawString(s, 150 / 2, 50 / 2, VCENTER | HCENTER);
+
+	}
+
+	void drawPopInfo(float dt)
+	{
+		stPersonInfo.setString(popPerson.selected + "" + popPersonInfo.selected);
+		popPersonInfo.paint(dt);
+	}
+
+	bool keyPopInfo(iKeystate stat, iPoint point)
+	{
+		//if (popTop == null || popTop.bShow == false)
+		//	return false;
+
+		if (popPersonInfo.bShow == false)
+			return false;
+		if (popPersonInfo.state != iPopupState.proc)
+		{
+			// 화면 안에 있을때
+			return true;
+			// 없을대 false
+		}
+		else
+		{
+			// 없을대 false
+		}
+
+		statePerson_ = stat;
+
+		int i, j = -1;
+		iPoint p;
+		p = popPersonInfo.closePoint;
+		iSize s = new iSize(0, 0);
+
+
+		switch (stat)
+		{
+			case iKeystate.Began:
+				scroll = false;
+				firstPoint = point;
+				prevPoint = point;
+				for (i = 0; i < 2; i++)
+				{
+					if (imgPersonInfoBtn[i].touchRect(p, s).containPoint(point))
+					{
+						j = i;
+						break;
+					}
+				}
+				if (j != -1)
+				{
+					// audio play button 효과음
+					popPersonInfo.selected = j;
+				}
+				break;
+
+			case iKeystate.Moved:				
+				break;
+
+			case iKeystate.Ended:
+				if (popPersonInfo.selected != -1)
+				{
+					Debug.Log("popPersonInfo 눌름짐 " + popPersonInfo.selected);
+				}
+				popPersonInfo.selected = -1;
+				break;
+		}
+
+		return true;
+	}
 }

@@ -22,8 +22,15 @@ public class iStrTex
 	// ============================================================
 	// static : runSt()를 void OnGUI()함수 내 서두 부분에 호출해야 함.
 	// ============================================================
+	static int max = 0;
 	public static void runSt()
 	{
+		if( max < stInfoNum )
+		{
+			max = stInfoNum;
+			//Debug.Log("max = " + max);
+		}
+
 		for (int i = 0; i < stInfoNum; i++)
 		{
 			ref StInfo info = ref stInfo[i];
@@ -44,7 +51,7 @@ public class iStrTex
 			cls = c;
 		}
 	}
-	static StInfo[] stInfo = new StInfo[100];
+	static StInfo[] stInfo = new StInfo[1000];
 	static int stInfoNum;
 
 	// ============================================================

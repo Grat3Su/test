@@ -6,6 +6,7 @@ using STD;
 
 public class gGUI : iGUI
 {
+	bool initialize;
 	void Start()
 	{
 		init();
@@ -18,9 +19,9 @@ public class gGUI : iGUI
 		Camera.onPreRender = onPrev;
 		Camera.onPostRender = onEnd;
 
-		load();
 		MainCamera.methodMouse += new MethodMouse(key);
 		MainCamera.methodWheel += new MethodWheel(wheel);
+		initialize = true;
 	}
 	//void Update() { }
 
@@ -101,6 +102,11 @@ public class gGUI : iGUI
 			Vector3.zero, Quaternion.identity, new Vector3(1, 1, 1));
 
 		// 1. OnRenderObject
+		if( initialize )
+		{
+			load();
+			initialize = false;
+		}
 		iStrTex.runSt();
 		draw(delta);
 

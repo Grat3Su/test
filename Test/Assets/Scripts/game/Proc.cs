@@ -29,7 +29,9 @@ public class Proc : gGUI
 		drawBg(dt);
 		drawPopTop(dt);
 		drawPopPerson(dt);
-		drawPopInfo(dt);
+
+        if(clickEvent)
+        drawPopInfo(dt);
 	}
 
 	public override void key(iKeystate stat, iPoint point)
@@ -213,11 +215,12 @@ public class Proc : gGUI
 	iKeystate statePerson_ = iKeystate.Moved;
 	void drawPopPerson(float dt)
 	{
-		stPerson.setString(statePerson_ + "" + offY);// click, move
+		stPerson.setString(popPerson.selected+ " " +statePerson_ + "" + offY);// click, move
 
 		popPerson.paint(dt);
 	}
 
+    bool clickEvent = false;
 	bool scroll;
 	iPoint prevPoint, firstPoint, mp;
 
@@ -254,10 +257,12 @@ public class Proc : gGUI
 				prevPoint = point;
 				for(i=0; i<people; i++)
 				{
-					if ( imgPersonBtn[i].touchRect(p, s).containPoint(point) )
+					if ( imgPersonBtn[i].touchRect(p, s).containPoint(point) )//클릭되면 ㅁ
 					{
 						j = i;
-						break;
+                        clickEvent = true;
+
+                        break;
 					}
 				}
 				if( j!=-1 )
@@ -477,7 +482,10 @@ public class Proc : gGUI
 					if (imgPersonInfoBtn[i].touchRect(p, s).containPoint(point))
 					{
 						j = i;
-						break;
+
+                        if (j == 0)
+                            clickEvent = false;
+                        break;
 					}
 				}
 				if (j != -1)

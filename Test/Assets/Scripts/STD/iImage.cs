@@ -140,7 +140,7 @@ namespace STD
 		public iPoint center(iPoint off)
 		{
 			return new iPoint(	off.x + position.x + tex.tex.width / 2,
-								off.x + position.y + tex.tex.height / 2);
+								off.y + position.y + tex.tex.height / 2);
 		}
 	}
 }

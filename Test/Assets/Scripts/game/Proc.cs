@@ -16,7 +16,7 @@ public class Proc : gGUI
 
 		//popTop.show(true);
 		popPerson.show(true);
-		popPersonInfo.show(true);
+		popPersonInfo.show(false);
 	}
 
 	public override void free()
@@ -30,7 +30,6 @@ public class Proc : gGUI
 		drawPopTop(dt);
 		drawPopPerson(dt);
 
-        if(clickEvent)
         drawPopInfo(dt);
 	}
 
@@ -220,7 +219,6 @@ public class Proc : gGUI
 		popPerson.paint(dt);
 	}
 
-    bool clickEvent = false;
 	bool scroll;
 	iPoint prevPoint, firstPoint, mp;
 
@@ -260,9 +258,8 @@ public class Proc : gGUI
 					if ( imgPersonBtn[i].touchRect(p, s).containPoint(point) )//클릭되면 ㅁ
 					{
 						j = i;
-                        clickEvent = true;
-
-                        break;
+						
+						break;
 					}
 				}
 				if( j!=-1 )
@@ -304,9 +301,10 @@ public class Proc : gGUI
 			case iKeystate.Ended:
 				if (scroll==false)
 				{
-					if( popPerson.selected == -1 )
+					if (popPersonInfo.bShow == false)
 					{
-						Debug.Log("눌름짐 " + popPerson.selected);
+						popPersonInfo.show(true);
+						popPersonInfo.openPoint = imgPersonBtn[popPerson.selected].center(p);
 					}
 				}
 				break;
@@ -384,7 +382,7 @@ public class Proc : gGUI
 			imgPersonInfoBtn[i] = img;
 		}
 
-		pop.style = iPopupStyle.move;
+		pop.style = iPopupStyle.zoom;
 		pop.openPoint = new iPoint(MainCamera.devWidth, MainCamera.devHeight );
 		pop.closePoint = new iPoint(MainCamera.devWidth/2-350, MainCamera.devHeight/2-200);
 		pop._aniDt = 0.5f;
@@ -403,7 +401,7 @@ public class Proc : gGUI
 		setRGBA(1, 1, 1, 1);
 		drawRect(50, 50, 300, 300);//이미지
 
-		drawString("이름", new iPoint(450, 100), VCENTER | HCENTER);
+		drawString("이름 : " + popPerson.selected + "번", new iPoint(450, 100), VCENTER | HCENTER);
 		drawString("레벨", new iPoint(450, 150), VCENTER | HCENTER);
 		drawString("동작", new iPoint(450, 200), VCENTER | HCENTER);
 
@@ -483,9 +481,7 @@ public class Proc : gGUI
 					{
 						j = i;
 
-                        if (j == 0)
-                            clickEvent = false;
-                        break;
+						break;
 					}
 				}
 				if (j != -1)
@@ -501,9 +497,14 @@ public class Proc : gGUI
 			case iKeystate.Ended:
 				if (popPersonInfo.selected != -1)
 				{
-					Debug.Log("popPersonInfo 눌름짐 " + popPersonInfo.selected);
+					if (popPersonInfo.selected == 0)
+					{
+						popPerson.selected = -1;
+						popPersonInfo.show(false);
+					}
+					
+					popPersonInfo.selected = -1;
 				}
-				popPersonInfo.selected = -1;
 				break;
 		}
 

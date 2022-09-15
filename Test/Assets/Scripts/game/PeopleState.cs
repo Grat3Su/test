@@ -52,12 +52,15 @@ public class PeopleState : MonoBehaviour
 		else if (job == 3)//농부
 		{
 			// 농사를 지어 안정적으로 식량을 수급한다
-
+			int mount = Random.Range(0, 2) + 2 * level;
+			item.food = mount;
 		}
 		else if (job == 4)//연구원
 		{
 			//연구해서 연구 경험치를 올린다.
 			//연구 레벨이 오르면 자원 상한량이 오른다.
+			int mount = Random.Range(0, 2) + 2 * level;
+			item.labExp = mount;
 		}
 	}
 }

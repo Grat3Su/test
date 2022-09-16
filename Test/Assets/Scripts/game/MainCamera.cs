@@ -7,32 +7,67 @@ using STD;
 public class MainCamera : MonoBehaviour
 {
 	// 개발 해상도(1080p, 720p)
-	// (ipad) 1024 x 768
-	// (iphone) 2.1:1
-	// (android) 12:9, 2:1
-	// (pc) 16:9
 	public static int devWidth = 1280, devHeight = 720;
 
-	// 16:9 개발
-	// 액자처리
-
-	// 최적화 16:9 대응 4:3, 아이폰 2.1:1
-	// 4:3 ~ 2.1:1
-
-	public static MethodMouse methodMouse = null;
+	//mouse
+	public static MethodMouse[] methodMouse = new MethodMouse[100];
+	public static int numMethodMouse = 0;
+	public static void addMethodMouse(MethodMouse mm)
+	{
+		methodMouse[numMethodMouse] = mm;
+		numMethodMouse++;
+	}
+	public static void runMethodMouse(iKeystate stat, iPoint point)
+	{
+		for(int i=numMethodMouse-1; i>-1; i--)
+		{
+			if (methodMouse[i](stat, point))
+				return;
+		}
+	}
 	bool drag;
 	Vector3 prevV;
 
-	public static MethodWheel methodWheel = null;
+	//wheel
+	public static MethodWheel[] methodWheel = new MethodWheel[100];
+	public static int numMethodWheel = 0;
+	public static void addMethodWheel(MethodWheel mm)
+	{
+		methodWheel[numMethodWheel] = mm;
+		numMethodWheel++;
+	}
+	public static void runMethodWheel(iPoint point)
+	{
+		for (int i = numMethodWheel- 1; i > -1; i--)
+		{
+			if (methodWheel[i]( point))
+				return;
+		}
+	}
 
-	public static MethodKeyboard methodKeyboard = null;
+	//keyboard
+	public static MethodKeyboard[] methodKeyboard = new MethodKeyboard[100];
+	public static int numMethodKeyboard = 0;
+	public static void addMethodKeyboard(MethodKeyboard mm)
+	{
+		methodKeyboard[numMethodKeyboard] = mm;
+		numMethodKeyboard++;
+	}
+	public static void runMethodKeyboard(iKeystate stat, iKeyboard key)
+	{
+		for (int i = numMethodKeyboard - 1; i > -1; i--)
+		{
+			if (methodKeyboard[i](stat, key))
+				return;
+		}
+	}
 
 	void Start()
     {
 		drag = false;
 
 		loadGameHierachy();
-		methodMouse = keyGameHierachy;
+		addMethodMouse(keyGameHierachy);
 
 		new Main();
 	}
@@ -60,8 +95,7 @@ public class MainCamera : MonoBehaviour
 			drag = true;
 			prevV = Input.mousePosition;// 누르자 말자 Moved 안들어오게 방지
 
-			if (methodMouse != null)
-				methodMouse(iKeystate.Began, p);
+			runMethodMouse(iKeystate.Began, p);
 		}
 		else if (Input.GetMouseButtonUp(btn))
 		{
@@ -69,8 +103,7 @@ public class MainCamera : MonoBehaviour
 			//Debug.LogFormat($"Ended p({p.x},{p.y})");
 			drag = false;
 
-			if (methodMouse != null)
-				methodMouse(iKeystate.Ended, p);
+			runMethodMouse(iKeystate.Ended, p);
 		}
 
 		if (drag)
@@ -83,8 +116,7 @@ public class MainCamera : MonoBehaviour
 			iPoint p = mousePosition();
 			//Debug.LogFormat($"Moved p({p.x},{p.y})");
 
-			if (methodMouse != null)
-				methodMouse(iKeystate.Moved, p);
+			runMethodMouse(iKeystate.Moved, p);
 		}
 	}
 
@@ -95,7 +127,7 @@ public class MainCamera : MonoBehaviour
 
 		if (Input.mouseScrollDelta != Vector2.zero)
 		{
-			methodWheel(new iPoint(Input.mouseScrollDelta.x,
+			runMethodWheel(new iPoint(Input.mouseScrollDelta.x,
 									Input.mouseScrollDelta.y));
 		}
 	}
@@ -110,11 +142,11 @@ public class MainCamera : MonoBehaviour
 			KeyCode c = kc[i];
 
 			if (Input.GetKeyDown(c))
-				methodKeyboard(iKeystate.Began, (iKeyboard)i);
+				runMethodKeyboard(iKeystate.Began, (iKeyboard)i);
 			else if (Input.GetKeyUp(c))
-				methodKeyboard(iKeystate.Ended, (iKeyboard)i);
+				runMethodKeyboard(iKeystate.Ended, (iKeyboard)i);
 			else if (Input.GetKey(c))
-				methodKeyboard(iKeystate.Moved, (iKeyboard)i);
+				runMethodKeyboard(iKeystate.Moved, (iKeyboard)i);
 		}
 	}
 	private KeyCode[] kc = new KeyCode[]
@@ -164,8 +196,8 @@ public class MainCamera : MonoBehaviour
 
 	}
 
-	void keyGameHierachy(iKeystate stat, iPoint point)
+	bool keyGameHierachy(iKeystate stat, iPoint point)
 	{
-
+		return false;
 	}
 }

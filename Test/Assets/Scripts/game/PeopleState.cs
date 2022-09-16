@@ -9,20 +9,25 @@ public class PeopleState : MonoBehaviour
     public int level;
     public float exp;
 
+	int takeTime;
+
     void Start()
     {
         //이름은 외부에서 지정
         job = 0;
         level = 0;
         exp = 0;
+		takeTime = 0;
 
-    }
+	}
 
     // Update is called once per frame
     void Update()
     {
-        
-    }
+		if (takeTime > 3)
+			jobAction();
+
+	}
 
     public void jobUpdate(int newJob)
 	{
@@ -31,6 +36,10 @@ public class PeopleState : MonoBehaviour
 
     void jobAction()// 0 : 백수 / 1 : 탐험가 / 2 : 일꾼 / 3 : 농부 / 4 : 연구원
 	{
+		takeTime -= 4;
+		if (takeTime < 0)
+			takeTime = 0;
+
 		int bonus = level * 2;
 		AddItem item = new AddItem(0);
 		if (job == 1)//탐험가
@@ -63,21 +72,4 @@ public class PeopleState : MonoBehaviour
 			item.labExp = mount;
 		}
 	}
-}
-
-public struct AddItem
-{
-	public int   people;
-	public int   food;
-	public float labExp;
-	public float stageExp;
-
-	public AddItem(int t)
-	{
-		people = 0;
-		food = 0;
-		labExp = 0;
-		stageExp = 0;
-	}
-
 }

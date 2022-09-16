@@ -19,6 +19,13 @@ public class Proc : gGUI
 		popPerson.show(true);
 		popPersonInfo.show(false);
 		popNewDay.show(true);
+
+		//우선순위
+		MainCamera.addMethodMouse(new MethodMouse(keyPopInfo));
+		MainCamera.addMethodMouse(new MethodMouse(keyPopPerson));
+		MainCamera.addMethodMouse(new MethodMouse(keyPopTop));
+		MainCamera.addMethodMouse(new MethodMouse(keyBg));
+		MainCamera.addMethodMouse(new MethodMouse(keyNewDay));
 	}
 
 	public override void free()
@@ -31,30 +38,24 @@ public class Proc : gGUI
 		drawBg(dt);
 		drawPopTop(dt);
 		drawPopPerson(dt);
-		drawNewDay(dt);
         drawPopInfo(dt);
+		drawNewDay(dt);
 	}
 
-	public override void key(iKeystate stat, iPoint point)
+	public override bool key(iKeystate stat, iPoint point)
 	{
-		keyPopPerson(stat, point);
+		//keyNewDay(stat, point);
+		//keyPopInfo(stat, point);
+		//keyPopPerson(stat, point);
+		//keyBg(stat, point);
+		//keyPopTop(stat, point)
 
-		keyBg(stat, point);
-		keyPopInfo(stat, point);
-		keyNewDay(stat, point);
-
-		if (keyPopTop(stat, point))
-			return;
-
-		if (stat == iKeystate.Began)
-		{
-		//	Main.me.reset("Intro");
-
-		}
+		return false;
 	}
-	public override void wheel(iPoint point)
+	public override bool wheel(iPoint point)
 	{
 		wheelPopPerson(point);
+		return false;
 	}
 
 	// ========================================================
@@ -74,9 +75,9 @@ public class Proc : gGUI
 		fillRect(100, 100, 300, 200);
 	}
 
-	void keyBg(iKeystate stat, iPoint point)
+	bool keyBg(iKeystate stat, iPoint point)
 	{
-
+		return false;
 	}
 
 	// ========================================================
@@ -118,7 +119,7 @@ public class Proc : gGUI
 
 		}
 
-		return true;
+		return false;
 	}
 
 	// ========================================================
@@ -312,10 +313,9 @@ public class Proc : gGUI
 
 	}
 
-	iKeystate statePerson_ = iKeystate.Moved;
 	void drawPopPerson(float dt)
 	{
-		stPerson.setString(popPerson.selected+ " " +statePerson_ + "" + offPerson.y);// click, move
+		stPerson.setString(popPerson.selected+ " " + offPerson.y);// click, move
 
 		popPerson.paint(dt);
 	}
@@ -327,14 +327,13 @@ public class Proc : gGUI
 	{
 		if (popPerson.bShow == false)
 			return false;
+		
+		Debug.Log("popPerson");
+
 		if (popPerson.state != iPopupState.proc)
 		{
 			// 화면 안에 있을때
 			return true;
-			// 없을대 false
-		}
-		else
-		{
 			// 없을대 false
 		}
 
@@ -342,11 +341,8 @@ public class Proc : gGUI
 		p = popPerson.closePoint;
 		p.y += offPerson.y;
 
-		statePerson_ = stat;
-
 		int i, j = -1;
 		iSize s = new iSize(0, 0);
-			
 
 		switch ( stat )
 		{
@@ -407,7 +403,8 @@ public class Proc : gGUI
 					{
 						if (popPerson.selected != -1)
 						{
-							popPersonInfo.show(true);
+							if (!popNewDay.bShow)
+								popPersonInfo.show(true);
 
 							popPersonInfo.openPoint = imgPersonBtn[popPerson.selected].center(p);
 						}
@@ -416,11 +413,14 @@ public class Proc : gGUI
 				break;
 		}
 
-		return true;
+		return false;
 	}
 
 	bool wheelPopPerson(iPoint point)
 	{
+		if (popNewDay.bShow)
+			return false;
+
 		iPoint p = MainCamera.mousePosition();
 		if (p.x > popPerson.closePoint.x && p.x < popPerson.closePoint.x + 200 &&
 			p.y > popPerson.closePoint.y && p.y < popPerson.closePoint.y + 500)
@@ -548,17 +548,22 @@ public class Proc : gGUI
 
 	void drawPopInfo(float dt)
 	{
+		if (popNewDay.bShow)
+		{
+			popPerson.selected = -1;
+			return;
+		}
 		stPersonInfo.setString(popPerson.selected + "" + popPersonInfo.selected + "" +select);
 		popPersonInfo.paint(dt);
 	}
 
 	bool keyPopInfo(iKeystate stat, iPoint point)
 	{
-		//if (popTop == null || popTop.bShow == false)
-		//	return false;
-
 		if (popPersonInfo.bShow == false)
 			return false;
+
+		Debug.Log("popInfo");
+
 		if (popPersonInfo.state != iPopupState.proc)
 		{
 			// 화면 안에 있을때
@@ -570,13 +575,10 @@ public class Proc : gGUI
 			// 없을대 false
 		}
 
-		statePerson_ = stat;
-
 		int i, j = -1;
 		iPoint p;
 		p = popPersonInfo.closePoint;
 		iSize s = new iSize(0, 0);
-
 
 		switch (stat)
 		{
@@ -589,7 +591,6 @@ public class Proc : gGUI
 					if (imgPersonInfoBtn[i].touchRect(p, s).containPoint(point))
 					{
 						j = i;
-
 						break;
 					}
 				}
@@ -630,13 +631,15 @@ public class Proc : gGUI
 
 		iImage img = new iImage();
 		iStrTex st = new iStrTex(methodStNewDay, MainCamera.devWidth - 200, MainCamera.devHeight - 200);
+		st.setString("0");
 		img.add(st.tex);
 		pop.add(img);
 		stNewDay = st;
 
-		pop.style = iPopupStyle.move;
-		pop.openPoint = new iPoint(MainCamera.devWidth, 100);
-		pop.closePoint = new iPoint((MainCamera.devWidth - img.tex.tex.width) / 2, 100);
+		int w = MainCamera.devWidth;
+		pop.style = iPopupStyle.zoom;
+		pop.openPoint = new iPoint(w/ 2, MainCamera.devHeight/2);
+		pop.closePoint = new iPoint((w - (w - 200))/2, 100);
 		pop._aniDt = 0.5f;
 		popNewDay = pop;
 	}
@@ -648,15 +651,25 @@ public class Proc : gGUI
 
 	public void methodStNewDay_(iStrTex st)//진짜 그리는곳
 	{
-		setRGBA(0.5f, 0.5f, 0.5f, 0.5f);
-		fillRect(0, 0, MainCamera.devWidth - 200, MainCamera.devHeight - 200);
+		setRGBA(0f, 0f, 0f, 0.8f);
+		int w = MainCamera.devWidth - 200;
+		int h = MainCamera.devHeight - 200;
+		fillRect(0, 0, w, h);
+
+		setStringRGBA(1, 1, 1, 1);
+		float size = getStringSize();
+		setStringSize(80);
+		drawString("New Day", w/2, h/2 - 150, VCENTER|HCENTER);
+		setStringSize(30);
+		
+		for (int i = 0; i<4; i++)
+			drawString("0 개", w /4 * (i +1) - 150, h / 2 + 150, VCENTER | HCENTER);
+
+		setStringSize(size);
 	}
 
 	void drawNewDay(float dt)
-	{
-		if(popPersonInfo.bShow)
-			popPersonInfo.show(false);
-				
+	{				
 		popNewDay.paint(dt);
 	}
 
@@ -664,11 +677,13 @@ public class Proc : gGUI
 	{
 		if (popNewDay.bShow == false)
 			return false;
+		
+		Debug.Log("popNewDay");
 
 		switch (stat)
 		{
 			case iKeystate.Began:
-
+				popNewDay.show(false);
 				break;
 
 			case iKeystate.Moved:

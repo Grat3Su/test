@@ -26,11 +26,12 @@ public class Intro : gGUI
 
 	}
 
-	public override void key(iKeystate stat, iPoint point)
+	public override bool key(iKeystate stat, iPoint point)
 	{
 		if( stat==iKeystate.Began )
 		{
 			Main.me.reset("Proc");
 		}
+		return false;
 	}
 }

@@ -19,8 +19,8 @@ public class gGUI : iGUI
 		Camera.onPreRender = onPrev;
 		Camera.onPostRender = onEnd;
 
-		MainCamera.methodMouse += new MethodMouse(key);
-		MainCamera.methodWheel += new MethodWheel(wheel);
+		MainCamera.addMethodMouse(new MethodMouse(key));
+		MainCamera.addMethodWheel(new MethodWheel(wheel));
 		initialize = true;
 	}
 	//void Update() { }
@@ -139,12 +139,14 @@ public class gGUI : iGUI
 		// do nothing
 	}
 
-	public virtual void key(iKeystate stat, iPoint point)
+	public virtual bool key(iKeystate stat, iPoint point)
 	{
 		// do nothing
+		return false;
 	}
-	public virtual void wheel(iPoint point)
+	public virtual bool wheel(iPoint point)
 	{
 		// do nothing
+		return false;
 	}
 }

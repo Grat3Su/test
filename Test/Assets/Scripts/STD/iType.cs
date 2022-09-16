@@ -12,8 +12,8 @@ namespace STD
 		Double,
 	};
 
-	public delegate void MethodMouse(iKeystate stat, iPoint point);
-	public delegate void MethodWheel(iPoint wheel);
+	public delegate bool MethodMouse(iKeystate stat, iPoint point);
+	public delegate bool MethodWheel(iPoint wheel);
 
 	public enum iKeyboard
 	{
@@ -24,7 +24,7 @@ namespace STD
 		Space
 	};
 
-	public delegate void MethodKeyboard(iKeystate stat, iKeyboard key);
+	public delegate bool MethodKeyboard(iKeystate stat, iKeyboard key);
 
 }
 

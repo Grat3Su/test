@@ -9,7 +9,7 @@ public class PeopleState : MonoBehaviour
     public int level;
     public float exp;
 
-	int takeTime;
+	public int takeTime;
 
     void Start()
     {
@@ -18,7 +18,6 @@ public class PeopleState : MonoBehaviour
         level = 0;
         exp = 0;
 		takeTime = 0;
-
 	}
 
     // Update is called once per frame
@@ -26,7 +25,6 @@ public class PeopleState : MonoBehaviour
     {
 		if (takeTime > 3)
 			jobAction();
-
 	}
 
     public void jobUpdate(int newJob)
@@ -34,7 +32,7 @@ public class PeopleState : MonoBehaviour
         job = newJob;
 	}
 
-    void jobAction()// 0 : 백수 / 1 : 탐험가 / 2 : 일꾼 / 3 : 농부 / 4 : 연구원
+    public void jobAction()// 0 : 백수 / 1 : 탐험가 / 2 : 일꾼 / 3 : 농부 / 4 : 연구원
 	{
 		takeTime -= 4;
 		if (takeTime < 0)
@@ -48,7 +46,7 @@ public class PeopleState : MonoBehaviour
 			if (Random.Range(0, 100) > (80 - bonus))
 				item.people = 1;
 
-			item.stageExp = 2 + bonus;//레벨에 따라 얻는 량 달라짐
+			item.mapExp = 2 + bonus;//레벨에 따라 얻는 량 달라짐
 
 		}
 		else if (job == 2)//일꾼

@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-	public static Storage instance;
+	public static Storage storage;
 
 	public int day;
 	public int hour;
@@ -13,8 +13,8 @@ public class Player : MonoBehaviour
 
 	void Start()
     {
-		if(instance == null)
-			instance = new Storage(0, 0, 0, 0, 0, 0);
+		if(storage == null)
+            storage = new Storage(0, 0, 0, 0, 0, 0);
 		day = 0;
 		hour = 0;
 		ps = new PeopleState[100];
@@ -26,6 +26,14 @@ public class Player : MonoBehaviour
     {
         
     }
+
+    void spawnPeople()
+    {
+        GameObject go = new GameObject();
+
+        go.AddComponent<PeopleState>();
+    }
+
 	enum DoEvent
 	{
 		Adventure,
@@ -44,7 +52,7 @@ public class Player : MonoBehaviour
 			item.food = Random.Range(0, 2);
 			item.people = Random.Range(0, 100) > 50 ? Random.Range(1, 2) : 0;			
 
-			item.stageExp += 4;
+			item.mapExp += 4;
 			item.takeTime = 4;
 		}
 		else if (type == DoEvent.Hunt)
@@ -55,7 +63,7 @@ public class Player : MonoBehaviour
 		}
 		else if (type == DoEvent.Research)
 		{
-			int labLevel = instance.lab;
+			int labLevel = storage.lab;
 			item.labExp = labLevel < 5 ? Random.Range(1, 3) : Random.Range(2, 5);
 			item.takeTime = 4;
 		}
@@ -69,8 +77,18 @@ public class Player : MonoBehaviour
 
 	void updateEvent(AddItem item)
 	{
+        storage.people += item.people;
+        storage.food += item.food;
+        storage.labExp += item.labExp;
+        storage.mapExp += item.mapExp;
 
-	}
+        storage.update();
+
+        for (int i = 0; i < storage.people; i++)
+        {
+            ps[i].takeTime += item.takeTime;
+        }
+    }
 }
 
 public class Storage//저장고. 주로 자원 보관.
@@ -106,7 +124,7 @@ public class Storage//저장고. 주로 자원 보관.
 		return r[type] + " / " + r0[type];
 	}
 
-	void update()
+	public void update()
 	{
 		int need = lab < 10 ? 4 * lab : 2 * lab + 20;
 		while (labExp > need)
@@ -143,16 +161,14 @@ public class Storage//저장고. 주로 자원 보관.
 		else if (food == 0)
 			food = 0;
 	}
-
-
 }
 
 public struct AddItem
 {
 	public int people;
 	public int food;
-	public float labExp;
-	public float stageExp;
+	public int labExp;
+	public int mapExp;
 	public int takeTime;
 
 	public AddItem(int t)
@@ -160,7 +176,7 @@ public struct AddItem
 		people = 0;
 		food = 0;
 		labExp = 0;
-		stageExp = 0;
+		mapExp = 0;
 		takeTime = 0;
 	}
 }

@@ -9,16 +9,17 @@ public class Proc : gGUI
 	public override void load()
 	{
 		loadBg();
-
+        loadPlayer();
+                
 		createPopTop();
 		createPopPerson();
 		createPopInfo();
 		createNewDay();
-
-		//popTop.show(true);
-		popPerson.show(true);
+        		
+        popTop.show(true);
+		popPerson.show(false);
 		popPersonInfo.show(false);
-		popNewDay.show(true);
+		popNewDay.show(false);
 
 		//우선순위
 		MainCamera.addMethodMouse(new MethodMouse(keyPopInfo));
@@ -26,6 +27,8 @@ public class Proc : gGUI
 		MainCamera.addMethodMouse(new MethodMouse(keyPopTop));
 		MainCamera.addMethodMouse(new MethodMouse(keyBg));
 		MainCamera.addMethodMouse(new MethodMouse(keyNewDay));
+
+        MainCamera.addMethodKeyboard(new MethodKeyboard(keyboardPlayer));
 	}
 
 	public override void free()
@@ -36,6 +39,8 @@ public class Proc : gGUI
 	public override void draw(float dt)
 	{
 		drawBg(dt);
+        drawPlayer(dt);
+
 		drawPopTop(dt);
 		drawPopPerson(dt);
         drawPopInfo(dt);
@@ -58,9 +63,9 @@ public class Proc : gGUI
 		return false;
 	}
 
-	// ========================================================
+	//=======================================================
 	// bg
-	// ========================================================
+	//=======================================================
 	void loadBg()
 	{
 
@@ -68,46 +73,95 @@ public class Proc : gGUI
 
 	void drawBg(float dt)
 	{
-		setRGBA(1, 1, 1, 1);
-		fillRect(0, 0, MainCamera.devWidth, MainCamera.devHeight);
-		
-		setRGBA(1, 1, 0, 1);
-		fillRect(100, 100, 300, 200);
-	}
+        setRGBA(1, 1, 1, 1f);
+        fillRect(0, 0, MainCamera.devWidth, MainCamera.devHeight);
+    }
 
 	bool keyBg(iKeystate stat, iPoint point)
 	{
 		return false;
 	}
 
-	// ========================================================
-	// popTop Resource info
-	// ========================================================
-	iPopup popTop;
-	iImage[] imgTopBtn;
+    //=======================================================
+    // Player
+    //=======================================================
+    void loadPlayer()
+    {
+        pPos = new iPoint(MainCamera.devWidth/2, MainCamera.devHeight/2);
+        speed = 50;
+        nextPos = new iPoint(0, 0);
+    }
 
-	void createPopTop()
+    iPoint pPos;
+    iPoint nextPos;
+    int speed;
+
+    void drawPlayer(float dt)
+    {
+        pPos.x += dt * nextPos.x * speed;
+        pPos.y += dt * nextPos.y * speed;
+
+        if (pPos.x < 0)
+            pPos.x = 0;
+        else if (pPos.x > MainCamera.devWidth - 50)
+            pPos.x = MainCamera.devWidth - 50;
+
+        if (pPos.y < 60)
+            pPos.y = 60;
+        else if (pPos.y > MainCamera.devHeight - 50)
+            pPos.y = MainCamera.devHeight - 50;
+
+        setRGBA(0, 1, 0, 1f);
+        fillRect(pPos.x, pPos.y, 50, 50);
+
+        nextPos = new iPoint(0, 0);
+    }
+
+    bool keyboardPlayer(iKeystate stat, iKeyboard key)
+    {
+        nextPos = new iPoint(0, 0);
+
+        if(key == iKeyboard.Down)
+            nextPos.y += 5;
+        else if (key == iKeyboard.Up)
+            nextPos.y -= 5;
+
+        if (key == iKeyboard.Left)
+            nextPos.x -= 5;
+        else if (key == iKeyboard.Right)
+            nextPos.x += 5;
+
+        return false;
+    }
+
+    //=======================================================
+    // popTop Resource info
+    //=======================================================
+    iPopup popTop = null;
+    iStrTex stPopTop;
+    
+    void createPopTop()
 	{
-
-	}
+        iPopup pop = new iPopup();
+        iImage img = new iImage();
+        iStrTex st = new iStrTex(methodStPopTop, MainCamera.devWidth, 60);
+        st.setString("0");
+        img.add(st.tex);
+        pop.add(img);
+        stPopTop = st;
+                
+        pop.style = iPopupStyle.move;
+        pop.openPoint = new iPoint(0, -60);
+        pop.closePoint = new iPoint(0,0);
+        pop._aniDt = 0.5f;
+        popTop= pop;
+    }
 
 	void drawPopTop(float dt)
 	{
-		//popTop.paint(dt);
-
-		setRGBA(0, 0, 0, 0.8f);
-		fillRect(0, 0, MainCamera.devWidth, 60);
-
-		iPoint p = new iPoint(5, 10);
-		
-
-		for (int i = 0; i < 4; i++)
-		{
-			p.x = 5 + i * 150;
-			fillRect(p.x, p.y, 50,50);
-		}
-
-	}
+        stPersonInfo.setString(popTop.selected + "");
+        popTop.paint(dt);
+    }
 
 	bool keyPopTop(iKeystate stat, iPoint point)
 	{
@@ -118,14 +172,32 @@ public class Proc : gGUI
 		{
 
 		}
-
 		return false;
 	}
 
-	// ========================================================
-	// popPerson
-	// ========================================================
-	iPopup popPerson = null;
+    public void methodStPopTop(iStrTex st)
+    {
+        iStrTex.methodTexture(st, methodStPopTop_);
+    }
+
+    public void methodStPopTop_(iStrTex st)
+    {
+        setRGBA(0, 0, 0, 0.8f);
+        fillRect(0, 0, MainCamera.devWidth, 60);
+
+        iPoint p = new iPoint(5, 10);
+
+        for (int i = 0; i < 4; i++)
+        {
+            p.x = 5 + i * 150;
+            fillRect(p.x, p.y, 50, 50);
+        }
+    }
+
+    // ======================================================
+    // popPerson
+    // ======================================================
+    iPopup popPerson = null;
 
 	iStrTex stPerson;
 	iImage[] imgPersonBtn;
@@ -139,9 +211,10 @@ public class Proc : gGUI
 
 		iImage img = new iImage();
 		iStrTex st = new iStrTex(methodStPerson, 200, 500);
-		img.add(st.tex);
+        st.setString("0");
+        img.add(st.tex);
 		pop.add(img);
-		stPerson = st;
+        stPerson = st;
 
 		imgPersonBtn = new iImage[100];
 		stPersonBtn = new iStrTex[100][];
@@ -313,9 +386,23 @@ public class Proc : gGUI
 
 	}
 
+    bool open = false;
+
 	void drawPopPerson(float dt)
 	{
-		stPerson.setString(popPerson.selected+ " " + offPerson.y);// click, move
+        if (MainCamera.mousePosition().x > MainCamera.devWidth - 50 && !open)
+        {
+            open = true;
+            popPerson.show(true);
+        }
+        else if (MainCamera.mousePosition().x < MainCamera.devWidth - 200 && open
+                    && select == -1)
+        {
+            open = false;
+            popPerson.show(false);
+        }
+
+        stPerson.setString(popPerson.selected+ " " + offPerson.y);// click, move
 
 		popPerson.paint(dt);
 	}
@@ -327,8 +414,6 @@ public class Proc : gGUI
 	{
 		if (popPerson.bShow == false)
 			return false;
-		
-		Debug.Log("popPerson");
 
 		if (popPerson.state != iPopupState.proc)
 		{
@@ -436,9 +521,9 @@ public class Proc : gGUI
 
 
 
-	// ========================================================
+	//=======================================================
 	// popInfo
-	// ========================================================
+	//=======================================================
 	iPopup popPersonInfo = null;
 
 	iStrTex stPersonInfo;
@@ -562,8 +647,6 @@ public class Proc : gGUI
 		if (popPersonInfo.bShow == false)
 			return false;
 
-		Debug.Log("popInfo");
-
 		if (popPersonInfo.state != iPopupState.proc)
 		{
 			// 화면 안에 있을때
@@ -678,8 +761,6 @@ public class Proc : gGUI
 		if (popNewDay.bShow == false)
 			return false;
 		
-		Debug.Log("popNewDay");
-
 		switch (stat)
 		{
 			case iKeystate.Began:

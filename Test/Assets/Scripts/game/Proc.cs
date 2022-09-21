@@ -22,11 +22,12 @@ public class Proc : gGUI
 		popNewDay.show(false);
 
 		//우선순위
-		MainCamera.addMethodMouse(new MethodMouse(keyPopInfo));
-		MainCamera.addMethodMouse(new MethodMouse(keyPopPerson));
-		MainCamera.addMethodMouse(new MethodMouse(keyPopTop));
-		MainCamera.addMethodMouse(new MethodMouse(keyBg));
-		MainCamera.addMethodMouse(new MethodMouse(keyNewDay));
+		MethodMouse[] m = new MethodMouse[]
+		{
+			keyPopInfo, keyPopPerson, keyPopTop, keyBg, keyNewDay
+		};
+		for(int i=0; i<m.Length; i++)
+			MainCamera.addMethodMouse(new MethodMouse(m[i]));
 
         MainCamera.addMethodKeyboard(new MethodKeyboard(keyboardPlayer));
 	}
@@ -238,11 +239,11 @@ public class Proc : gGUI
 		pop.style = iPopupStyle.move;
 		pop.openPoint = new iPoint(MainCamera.devWidth, (MainCamera.devHeight - 500) / 2);
 		pop.closePoint = new iPoint(MainCamera.devWidth - 210, (MainCamera.devHeight - 500) / 2);
-		pop._aniDt = 0.5f;
+		pop._aniDt = 0.2f;
 		popPerson = pop;
 
 		offPerson = new iPoint(0, 0);
-		offMin = new iPoint(0, 490 - 60 * 100);
+		offMin = new iPoint(0, 490 - 60 * people);
 		offMax = new iPoint(0, 0);
 	}
 
@@ -250,12 +251,13 @@ public class Proc : gGUI
 	{
 		iStrTex.methodTexture(st, methodStPerson_);
 	}
-	int people = 100;
+	int people = 30;
 	public void methodStPerson_(iStrTex st)
 	{
-		setRGBA(0.5f, 0.5f, 0.5f, 0.5f);
+		setRGBA(0.3f, 0.3f, 0.3f, 0.5f);
 		fillRect(0, 0, 300, 600);
-		
+
+		setRGBA(1, 1, 1, 1);
 		for (int i = 0; i < people; i++)
 		{
 			//for (int j = 0; j < 2; j++)
@@ -286,7 +288,7 @@ public class Proc : gGUI
 		int miniHeight = 500;
 
 		int mapWidth = 200;
-		int mapHeight = 60 * 100;
+		int mapHeight = 60 * people;
 
 		// 칸수
 		float numW = 1.0f * mapWidth / miniWidth;
@@ -303,66 +305,6 @@ public class Proc : gGUI
 		return new iRect(bX, bY, bW, bH);
 	}
 
-	class Scroll //그려야하는 위치. 스크롤바 크기, 
-	{
-		public iPoint off, offMin, offMax;
-		iRect drawRt;
-		iSize barSize;
-
-		public Scroll(iRect rt, iSize size, iSize bs)//그려야하는 위치, 크기?
-		{
-			off = new iPoint(0,0);
-			offMax = new iPoint(0,0);
-			offMin = new iPoint(rt.size.width - size.width, rt.size.height - size.height);
-
-			drawRt = rt;
-			barSize = bs;
-		}
-		
-		public void scrollMouse(iPoint mp)
-		{
-			off.y += mp.y;
-			if (off.y < offMin.y)
-				off.y = offMin.y;
-			else if (off.y > offMax.y)
-				off.y = offMax.y;
-		}
-
-		public void scrollWheel(iPoint mp)
-		{
-			off.y += mp.y * 10.0f;
-
-			if (off.y < offMin.y)
-				off.y = offMin.y;
-			else if (off.y > offMax.y)
-				off.y = offMax.y;
-		}
-
-		public iRect checkScrollbar(int total)
-		{
-			// 가로 크기 / 총 크기
-			int miniWidth = (int)drawRt.size.width;
-			int miniHeight = (int)drawRt.size.height;
-
-			int mapWidth = (int)drawRt.size.width;
-			int mapHeight = total;//총 크기
-
-			// 칸수
-			float numW = 1.0f * mapWidth / miniWidth;
-			float numH = 1.0f * mapHeight / miniHeight;
-
-
-			int bW = (int)barSize.width * miniWidth / mapWidth;
-			int bH = (int)barSize.height * miniHeight / mapHeight;
-
-			int bX = (int)Math.linear(off.x / offMin.x, 0, bW * (numW - 1));
-			int bY = (int)Math.linear(off.y / offMin.y, 0, bH * (numH - 1));
-
-			return new iRect(bX, bY, bW, bH);
-		}
-	}
-
-
 	public void methodStPersonBtn(iStrTex st)
 	{
 		iStrTex.methodTexture(st, methodStPersonBtn_);
@@ -372,9 +314,8 @@ public class Proc : gGUI
 		string[] strs = st.str.Split("\n");
 		int index = int.Parse(strs[0]);
 		string s = strs[1];
-
-		GUI.color = Color.white;
-		if ( index==0 )
+		setRGBA(1, 1, 1, 1);
+		if ( index == 0 )
 			setRGBA(1, 1, 1, 1);
 		else 
 			setRGBA(0.3f, 0.3f, 0.3f, 1);
@@ -383,10 +324,22 @@ public class Proc : gGUI
 
 		setStringRGBA(0, 0, 0, 1);
 		drawString(s, 150 / 2, 50 / 2, VCENTER | HCENTER);
-
+		GUI.color = Color.white;
 	}
 
     bool open = false;
+	float closedt = 0;
+	void closePerson(float dt)
+	{
+		closedt += dt;
+		if (closedt > 3)
+		{
+			closedt = 0;
+			popPerson.show(false);
+			open = false;
+		}
+
+	}
 
 	void drawPopPerson(float dt)
 	{
@@ -395,12 +348,9 @@ public class Proc : gGUI
             open = true;
             popPerson.show(true);
         }
-        else if (MainCamera.mousePosition().x < MainCamera.devWidth - 200 && open
-                    && select == -1)
-        {
-            open = false;
-            popPerson.show(false);
-        }
+        else if (MainCamera.mousePosition().x < MainCamera.devWidth - 200
+			&& open && select == -1)			
+			closePerson(dt);
 
         stPerson.setString(popPerson.selected+ " " + offPerson.y);// click, move
 
@@ -557,13 +507,13 @@ public class Proc : gGUI
 				if ( i==0 )
 				{
 					st = new iStrTex(methodStPersonInfoBtn, 50, 50);
-					st.setString(j+"\n"+"X");
+					st.setString(j+"\n"+" X " + "\n" + i);
 				}
 				//직업 바꾸기 : 1
 				else
 				{
 					st = new iStrTex(methodStPersonInfoBtn, 150, 50);
-					st.setString(j + "\n" + " 직업 ");
+					st.setString(j + "\n" + " 직업 " + "\n" + i);
 				}
 				img.add(st.tex);
 
@@ -616,19 +566,26 @@ public class Proc : gGUI
 	{
 		string[] strs = st.str.Split("\n");
 		int index = int.Parse(strs[0]);
+		int bindex = int.Parse(strs[2]);
 		string s = strs[1];
 
+		iPoint pos = new iPoint(0, 0);
+
 		GUI.color = Color.white;
-		if (index == 0)
+		if (index == 0 && bindex == 0)
 			setRGBA(1, 0, 0, 1);
-		else
+		else if (index == 0 && bindex == 1)
+			setRGBA(1, 1, 1, 1);		
+		else if (index == 1)
+		{
 			setRGBA(0.3f, 0.3f, 0.3f, 1);
+		}
 
-		fillRect(0, 0, 150, 50);
-
+		int w = st.tex.tex.width;
+		int h = st.tex.tex.height;
+		fillRect(0, 0, w, h);
 		setStringRGBA(0, 0, 0, 1);
-		drawString(s, 150 / 2, 50 / 2, VCENTER | HCENTER);
-
+		drawString(s, w/2, h/2, VCENTER | HCENTER);
 	}
 
 	void drawPopInfo(float dt)
@@ -693,7 +650,8 @@ public class Proc : gGUI
 					if (popPersonInfo.selected == 0)
 					{
 						popPerson.selected = -1;
-						select = -1;						
+						select = -1;
+						//open = false;
 						popPersonInfo.show(false);
 					}
 					
@@ -777,5 +735,64 @@ public class Proc : gGUI
 		}
 
 		return true;
+	}
+}
+
+class Scroll //그려야하는 위치. 스크롤바 크기, 
+{
+	public iPoint off, offMin, offMax;
+	iRect drawRt;
+	iSize barSize;
+
+	public Scroll(iRect rt, iSize size, iSize bs)//그려야하는 위치, 크기?
+	{
+		off = new iPoint(0, 0);
+		offMax = new iPoint(0, 0);
+		offMin = new iPoint(rt.size.width - size.width, rt.size.height - size.height);
+
+		drawRt = rt;
+		barSize = bs;
+	}
+
+	public void scrollMouse(iPoint mp)
+	{
+		off.y += mp.y;
+		if (off.y < offMin.y)
+			off.y = offMin.y;
+		else if (off.y > offMax.y)
+			off.y = offMax.y;
+	}
+
+	public void scrollWheel(iPoint mp)
+	{
+		off.y += mp.y * 10.0f;
+
+		if (off.y < offMin.y)
+			off.y = offMin.y;
+		else if (off.y > offMax.y)
+			off.y = offMax.y;
+	}
+
+	public iRect checkScrollbar(int total)
+	{
+		// 가로 크기 / 총 크기
+		int miniWidth = (int)drawRt.size.width;
+		int miniHeight = (int)drawRt.size.height;
+
+		int mapWidth = (int)drawRt.size.width;
+		int mapHeight = total;//총 크기
+
+		// 칸수
+		float numW = 1.0f * mapWidth / miniWidth;
+		float numH = 1.0f * mapHeight / miniHeight;
+
+
+		int bW = (int)barSize.width * miniWidth / mapWidth;
+		int bH = (int)barSize.height * miniHeight / mapHeight;
+
+		int bX = (int)Math.linear(off.x / offMin.x, 0, bW * (numW - 1));
+		int bY = (int)Math.linear(off.y / offMin.y, 0, bH * (numH - 1));
+
+		return new iRect(bX, bY, bW, bH);
 	}
 }
